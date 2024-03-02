@@ -13,7 +13,7 @@ The Dart Code is under proiect_flltr/lib and the SQL and python can be found und
 
 Logging screen
 ![log_in screen](/screenshots/log.png "Logging screen")
-# Table Select
+Table Select
 ![table_select](/screenshots/select.png "Table Select")
 Table View
 ![Table](/screenshots/table.png "Table View")
