@@ -11,19 +11,19 @@ The Dart Code is under proiect_flltr/lib and the SQL and python can be found und
 
 ## Screenshots
 
-# Logging screen
+Logging screen
 ![log_in screen](/screenshots/log.png "Logging screen")
 # Table Select
 ![table_select](/screenshots/select.png "Table Select")
-# Table View
+Table View
 ![Table](/screenshots/table.png "Table View")
-# Car Table
+Car Table
 ![Cars](/screenshots/cars.png "Car Table")
-# Employee Table
+Employee Table
 ![Employees](/screenshots/employees.png "Employee Table")
-# Add to Table
+Add to Table
 ![Add](/screenshots/add.png "Add to Table")
-# Database UML
+Database UML
 ![Db](/screenshots/db.png "Database UML")
 
 ## Built With
