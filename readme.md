@@ -1,7 +1,7 @@
 # Car Dealership and Service Area App
 
 This project is an application developed in Android Studio using the Flutter framework and MySQL for the database backend. It's designed to automate processes for a car dealership and service area, enhancing efficiency and user experience.
-
+The Dart Code is under Flutter/lib and the SQL and python can be found under sql
 ## Features
 
 - **Invoice Generation**: Automatically creates invoices when selling a car or buying car parts for service workshops.
@@ -11,12 +11,19 @@ This project is an application developed in Android Studio using the Flutter fra
 
 ## Screenshots
 
+#Logging screen
 ![log_in screen](/screenshots/log.png "Logging screen")
+#Table Select
 ![table_select](/screenshots/select.png "Table Select")
+#Table View
 ![Table](/screenshots/table.png "Table View")
+#Car Table
 ![Cars](/screenshots/cars.png "Car Table")
+#Employee Table
 ![Employees](/screenshots/employees.png "Employee Table")
+#Add to Table
 ![Add](/screenshots/add.png "Add to Table")
+#Database UML
 ![Db](/screenshots/db.png "Database UML")
 
 ## Built With
