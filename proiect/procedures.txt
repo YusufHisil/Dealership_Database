@@ -1,0 +1,289 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `adaugare_angajat`(in nume varchar(45), in prenume varchar(45), in cnp varchar(45),in rol enum('Mecanic','Agent_vanzari','Director_reprezentanta','Director_principal'),in adresa varchar(45), in salariu double, in ore_lucru int, in valabilitate_contract datetime, in angajatcol int,in idreprez int, out invalid boolean)
+BEGIN
+declare count_repr int;
+  select count(*) into count_repr from reprezentanta where reprezentanta.idReprezentanta = idreprez;
+  if rol != 'Director_principal' then
+    if count_repr>0 then
+            insert into angajat (Nume, Prenume, CNP, Rol, Adresa, Salariu, Ore_lucru, Valabilitate_contract, Angajatcol, IdReprezentanta)
+            values(nume, prenume,cnp, rol,adresa, salariu, ore_lucru, valabilitate_contract,angajatcol,idreprez);
+            select "Succesfully added";
+            set invalid = false;
+        else
+            set invalid = true;
+            select "Invalid credentials";
+    end if;
+ else
+    set invalid = true;
+    select "Cannot add super-admin";
+end if;
+END
+
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `adaugare_comanda`(in id_repr int, in id_piesa int, in cant int,in iddistr int, out invalid boolean)
+BEGIN
+	declare count_repr int;
+    declare count_piesa int;
+    declare count_distr int;
+    declare stock int;
+    
+    select count(*) into count_repr from reprezentanta where idReprezentanta = id_repr;
+    select count(*) into count_piesa from piesa where idPiesa=id_piesa;
+	select count(*) into count_distr from distribuitor where idDistribuitor=iddistr;
+    select Cantitate into stock from piesa,distribuitor,depozit_distribuitor 
+    where id_piesa=piesa.idPiesa and piesa.idPiesa=depozit_distribuitor.idPiesa and iddistr=depozit_distribuitor.id_distribuitor and distribuitor.idDistribuitor=depozit_distribuitor.id_distribuitor;
+    
+		if count_repr > 0 and count_piesa > 0 and count_distr > 0 and stock >= cant then
+			insert into comanda (id_reprezentanta, idPiesa, cantitate, idDistribuitor)
+			values(id_repr,id_piesa,cant,iddistr);
+			select "Succesfully added";
+			set invalid = false;
+		else
+			set invalid = true;
+			select "Invalid credentials";
+		end if;
+END
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `adaugare_mecanic`(in idAn int, in Nivel_exprtiza int, in Specializare enum('mecanic','electrician'), out invalid boolean)
+BEGIN
+	declare count_angajat int;
+    declare count_mecanic int;
+    declare ang_key int;
+    set ang_key = -1;
+    select count(*) into count_angajat from angajat where idAn = idAngajat;
+    select count(*) into count_mecanic from angajat where Rol = 'Mecanic' and  idAn = idAngajat;
+    select idAngajat into ang_key from mecanic where idAngajat = idAn;
+    if ang_key = -1 then
+		if count_angajat > 0 and count_mecanic > 0 then
+			insert into mecanic (idAngajat, Nivel_exprtiza, Specializare)
+			values(idAn,Nivel_exprtiza,Specializare);
+			select "Succesfully added";
+			set invalid = false;
+		else
+			set invalid = true;
+			select "Invalid credentials";
+		end if;
+	else 
+		set invalid = true;
+        select "Mecanic already exists";
+	end if;
+END
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `adaugare_user`(in iduse int, in nume varchar(45), in pass varchar(45),out invalid boolean)
+BEGIN
+declare countid int;
+declare acelasi int;
+ select count(*) into countid from angajat where idAngajat = iduse;
+ select count(*) into acelasi from user where idUser = iduse;
+
+if countid>0 and acelasi = 0 then 
+insert into user(idUser,Username,Password) values
+(iduse,nume,pass);
+set invalid = false;
+else
+set invalid = true;
+        select "Worker does not exist";
+    end if;
+
+
+END
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `adaugare_vanzare`( in id_Ag int, in id_cli int, in id_mas int,in data2 date, out invalid boolean)
+BEGIN
+    declare count_angajat int;
+    declare count_client int;
+    declare stock int;
+    declare idrepr int;
+    declare reprez int;
+
+    select count(*) into count_angajat from agent_vanzare where agent_vanzare.id_Agent = id_Ag;
+    select count(*) into count_client from client where id_cli=client.idClient;
+
+     select angajat.IdReprezentanta into idrepr from angajat
+      where id_Ag=angajat.idAngajat and angajat.Rol='Agent_vanzari';
+       
+    select inventar_masini.id_reprezentanta, nr_masini into reprez, stock from masina,inventar_masini
+       where id_mas=masina.idMasina and masina.idMasina=inventar_masini.id_masina and inventar_masini.id_reprezentanta=1;
+    
+        if count_angajat > 0 and count_client > 0 and stock>0 and idrepr=reprez then
+            insert into vanzare (id_Agent, id_client,id_masina,data)
+            values(id_Ag,id_cli,id_mas,data2);
+            select "Succesfully added";
+            set invalid = false;
+        else
+            set invalid = true;
+            select "Invalid credentials";
+        end if;
+END
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `modificare_angajat`(in iddirector int,IN idAngajatParam INT,in nume varchar(45), in prenume varchar(45), in cnp varchar(45),in rol enum('Mecanic','Agent_vanzari','Director_reprezentanta','Director_principal'),in adresa varchar(45), in salariu double, in ore_lucru int, in valabilitate_contract datetime, in angajatcol int, out invalid boolean)
+BEGIN
+
+  declare angajatid int;
+  DECLARE programareID INT;
+  declare verificare int;
+  declare verificare2 int;
+  declare rolremoved int;
+
+    select Rol into rolremoved from angajat where idAngajatParam=angajat.idAngajat;
+
+     select count(*) into angajatid from angajat where idAngajat = idAngajatParam;
+  -- Găsește factura asociată angajatului
+
+   select IdReprezentanta into verificare from angajat where iddirector=angajat.idAngajat;
+   select IdReprezentanta into verificare2 from angajat where idAngajatParam=angajat.idAngajat;
+  -- Găsește serviciul asociat angajatului
+
+  if idAngajatParam != 1 then
+    if (angajatid > 0 and verificare = verificare2) or (angajatid > 0 and iddirector = 1) or (rolremoved = 'Director_reprezentanta' and iddirector = 1) then 
+     UPDATE angajat
+		SET Nume=nume,Prenume=prenume,CNP=cnp,Adresa=adresa,Salariu=salariu,Ore_lucru=ore_lucru,Valabilitate_contract=valabilitate_contract,Angajatcol=angajatcol
+        where angajat.idAngajat=idAngajatParam;
+        set invalid = false;
+    else
+        set invalid = true;
+        select "Worker does not exist";
+    end if;
+else
+    set invalid = true;
+    select "Cannot remove super-admin";
+end if;
+END
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `programare`(in idM int, in idA int, in idC int, in prog_date date, out invalid boolean)
+BEGIN
+    declare countClient int;
+    declare countAtelier int;
+    declare countMecanic int;
+
+
+    select count(*) into countClient from client where idClient = idC;
+    select count(*)    into countAtelier from atelier where idAtelier = idA;
+    select count(*) into countMecanic from mecanic where idMecanic = idM;
+
+    if countClient > 0 and countAtelier > 0 and countMecanic > 0 then
+        insert into programare_atelier(idAtelier ,idMecanic, idClient, Data)
+        values(idA, idM, idC, prog_date);
+        select 'Succesfully inserted';
+        set invalid = False;
+    else
+        select 'Invalid credentials';
+        set invalid = True;
+
+    end if;
+
+
+END
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `programare_serviciu`(in Nume_serviciu varchar(45), in id_programare int, out invalid boolean)
+BEGIN
+	
+    declare count_serviciu int;
+    declare count_programare int;
+	declare s varchar(45);
+    declare c int;
+    declare ip int;
+    declare idAt int;
+    declare idRep int;
+    declare idDep int;
+    declare quantity int;
+    select count(*) into count_serviciu from lista_serviciu where Nume_serviciu = Serviciu;
+    select count(*) into count_programare from programare_atelier where id_programare = idProgramare_atelier;
+    
+    if count_serviciu > 0  and count_programare > 0 then
+			
+            
+        select serviciu, cantitate , idPiesa into s,c,ip from piese_necesare_serviciu where Nume_serviciu = Serviciu;
+        
+        select idAtelier into idAt from programare_atelier where id_programare = idProgramare_atelier;
+		
+        select id_reprezentanta into idRep from atelier where idAt = idAtelier;
+        
+        select cantitate into quantity from inventar_piese where idRep = idReprezentanta and idPiesa = ip;
+        
+        if quantity - c > 0 then
+        insert into serviciu_programare (Nume_serviciu, id_programare)
+        values(Nume_serviciu, id_programare);
+        set invalid = false;
+        select "Appointment succesfully made";
+        else
+        select "Not enough quantity";
+        set invalid = true;
+        end if;
+	else
+        select "Invalid credentials";
+        set invalid = true;
+        
+    end if;
+    
+	
+END
+
+**********************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `stergeAngajat`(in iddirector int,IN idAngajatParam INT,out invalid boolean)
+BEGIN
+  DECLARE facturaID INT;
+  declare angajatid int;
+  DECLARE programareID INT;
+  declare verificare int;
+  declare verificare2 int;
+  declare rolremoved int;
+
+    select Rol into rolremoved from angajat where idAngajatParam=angajat.idAngajat;
+
+     select count(*) into angajatid from angajat where idAngajat = idAngajatParam;
+  -- Găsește factura asociată angajatului
+  SELECT idFactura INTO facturaID FROM mydb.factura_vanzare,vanzare,agent_vanzare
+  WHERE id_vanzare = vanzare.idVanzare and vanzare.id_Agent = agent_vanzare.id_Agent and agent_vanzare.idAngajat= idAngajatParam;
+
+   select IdReprezentanta into verificare from angajat where iddirector=angajat.idAngajat;
+   select IdReprezentanta into verificare2 from angajat where idAngajatParam=angajat.idAngajat;
+  -- Găsește serviciul asociat angajatului
+  SELECT idProgramare_atelier INTO programareID FROM mydb.programare_atelier,mecanic
+  WHERE programare_atelier.idMecanic=mecanic.idMecanic and mecanic.idAngajat=idAngajatParam;
+
+  if idAngajatParam != 1 then
+    if (angajatid > 0 and verificare = verificare2) or (angajatid > 0 and iddirector = 1) or (rolremoved = 'Director_reprezentanta' and iddirector = 1) then 
+        DELETE FROM mydb.serviciu_programare WHERE id_programare = programareID;
+        DELETE FROM mydb.factura_serviciu WHERE id_programare = programareID;
+        DELETE FROM mydb.programare_atelier WHERE idProgramare_atelier = programareID;
+        DELETE FROM mydb.mecanic WHERE idAngajat = idAngajatParam;
+        delete from factura_vanzare where idFactura = facturaID;
+        DELETE FROM mydb.vanzare WHERE id_Agent = idAngajatParam;
+        DELETE FROM mydb.agent_vanzare WHERE idAngajat = idAngajatParam;
+        DELETE FROM mydb.user WHERE idUser = idAngajatParam;
+        DELETE FROM mydb.angajat WHERE idAngajat = idAngajatParam;
+        set invalid = false;
+    else
+        set invalid = true;
+        select "Worker does not exist";
+    end if;
+else
+    set invalid = true;
+    select "Cannot remove super-admin";
+end if;
+END
+
+****************************************************************************************
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `adaugare_client`(in Nume varchar(45), in Prenume varchar(45), in CNP varchar(45), in Adresa varchar(45), in Tel varchar(45))
+BEGIN
+
+insert into mydb.client(Nume,Prenume,CNP,Adresa,Tel)values
+(Nume,Prenume,CNP,Adresa,Tel);
+
+END
