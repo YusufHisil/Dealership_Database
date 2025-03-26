@@ -1,10 +1,3 @@
-///make it so when i connect and call this page in a navigator.push
-///i send the role as a parameter to this class, so that i know which tables to display
-/// INTREBARI PT BAIETI:
-///- avem nevoie de vederi? sa stiu sa invat
-// - cum dau call la o functie din sql?
-// - niste date cu care sa populez tabelele? aveti sau imi fac eu?
-/// make map of String aka the role to <String>[] of table names for generating the buttons with ListTile
 
 import 'package:flutter/material.dart';
 import 'package:mysql_client/mysql_client.dart';
