@@ -16,7 +16,6 @@ void addDialog(String _error,
   }
 
   showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) {
-    ///TODO move this and the button that invokes it in table.dart so that when you add a row and call setState, the table rerenders.
     return StatefulBuilder(
       builder: (BuildContext context, void Function(void Function()) setState) {
         return AlertDialog(
