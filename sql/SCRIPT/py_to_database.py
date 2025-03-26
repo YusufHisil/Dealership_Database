@@ -1,8 +1,6 @@
 from cars_info import cars_dict
 import mysql.connector
 
-# TODO: Schimba valorile pentru baza ta de date
-# TODO: RULEZI PRIMUL
 db_name = 'mydb'
 try:
     mydb = mysql.connector.connect(
